@@ -25,7 +25,7 @@ int cycle = 0;  // Init du cycle pour la mise en veille
 // Display splash logo at start
 void logo() {
   Heltec.display->clear();
-  Heltec.display->drawXbm(0, 0, logo_meteo_width, logo_meteo_height, (const unsigned char*)logo_meteo_bits);
+  Heltec.display->drawXbm(0, 0, logo_meteo_width, logo_meteo_height, (const unsigned char *)logo_meteo_bits);
   Heltec.display->display();
 }
 
@@ -38,7 +38,7 @@ void displayWeather(String payload) {
     Serial.println(error.c_str());
     return;
   } else {
-    const char* location = doc["name"];  // Le lieu
+    const char *location = doc["name"];  // Le lieu
     Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
     Heltec.display->setFont(ArialMT_Plain_16);
     Heltec.display->drawString(64, 0, location);
@@ -58,7 +58,7 @@ void displayWeather(String payload) {
     JsonObject weather = doc["weather"][0];
     String sky = weather["icon"];
     displayIcon(sky);
-    signalBars();  // affichage de la qualité du signal wifi
+    signalBars();               // affichage de la qualité du signal wifi
     Heltec.display->display();  // Affichage de l'écran météo
   }
 }
@@ -66,7 +66,7 @@ void displayWeather(String payload) {
 // Weather icon
 void displayIcon(String sky) {
   String sk = sky.substring(0, 2);
-  const char* icon;
+  const char *icon;
   switch (sk.toInt()) {
     case 1:
       icon = one_bits;
@@ -100,7 +100,7 @@ void displayIcon(String sky) {
       break;
   }
   // Heltec.display->drawXbm(80, 15, 30, 30, (const unsigned char*)icon);
-  Heltec.display->drawXbm(100, 15, 30, 30, (const unsigned char*)icon);
+  Heltec.display->drawXbm(100, 15, 30, 30, (const unsigned char *)icon);
 }
 
 // Signal intensity
@@ -136,52 +136,64 @@ void lightSleep() {
   Heltec.display->displayOn();
 }
 
-// WARNING: SysProvEvent is called from a separate FreeRTOS task (thread)!
-void SysProvEvent(arduino_event_t *sys_event) {
-  // Serial.println("SysProvEnven called");
-  switch (sys_event->event_id) {
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      Serial.print("\nConnected IP address : ");
-      Serial.println(IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr));
-      break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.println(F("\nDisconnected. Connecting to the AP again... "));
-      break;
-    case ARDUINO_EVENT_PROV_START:
-      Serial.println(F("\nProvisioning started\nGive Credentials of your access point using smartphone app"));
-      break;
-    case ARDUINO_EVENT_PROV_CRED_RECV:
-      {
-        Serial.println(F("\nReceived Wi-Fi credentials"));
-        Serial.print(F("\tSSID : "));
-        Serial.println((const char *)sys_event->event_info.prov_cred_recv.ssid);
-        Serial.print(F("\tPassword : "));
-        Serial.println((char const *)sys_event->event_info.prov_cred_recv.password);
+void CredsRecvEvent(arduino_event_t *sys_event) {
+  Serial.println(F("\nReceived Wi-Fi credentials"));
+  Serial.print(F("\tSSID : "));
+  Serial.println((const char *)sys_event->event_info.prov_cred_recv.ssid);
+  Serial.print(F("\tPassword : "));
+  Serial.println((char const *)sys_event->event_info.prov_cred_recv.password);
 
-        Serial.println(F("They are now stored in flash memory"));
-        preferences.putString("ssid", (const char *)sys_event->event_info.prov_cred_recv.ssid);
-        preferences.putString("password", (char const *)sys_event->event_info.prov_cred_recv.password);
-        break;
-      }
-    case ARDUINO_EVENT_PROV_CRED_FAIL:
-      {
-        Serial.println(F("\nProvisioning failed!\nPlease reset to factory and retry provisioning\n"));
-        if (sys_event->event_info.prov_fail_reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR)
-          Serial.println(F("\nWi-Fi AP password incorrect"));
-        else
-          Serial.println(F("\nWi-Fi AP not found....Add API \" nvs_flash_erase() \" before beginProvision()"));
-        break;
-      }
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-      Serial.println(F("\nProvisioning Successful"));
-      break;
-    case ARDUINO_EVENT_PROV_END:
-      Serial.println(F("\nProvisioning Ends"));
-      break;
-    default:
-      break;
-  }
+  Serial.println(F("They are now stored in flash memory"));
+  preferences.putString("ssid", (const char *)sys_event->event_info.prov_cred_recv.ssid);
+  preferences.putString("password", (char const *)sys_event->event_info.prov_cred_recv.password);
 }
+
+// WARNING: SysProvEvent is called from a separate FreeRTOS task (thread)!
+// void SysProvEvent(arduino_event_t *sys_event) {
+//   // Serial.println("SysProvEnven called");
+//   switch (sys_event->event_id) {
+//     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+//       Serial.print("\nConnected IP address : ");
+//       Serial.println(IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr));
+//       break;
+//     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+//       Serial.println(F("\nDisconnected. Connecting to the AP again... "));
+//       break;
+//     case ARDUINO_EVENT_PROV_START:
+//       Serial.println(F("\nProvisioning started\nGive Credentials of your access point using smartphone app"));
+//       break;
+//     case ARDUINO_EVENT_PROV_CRED_RECV:
+//       {
+//         Serial.println(F("\nReceived Wi-Fi credentials"));
+//         Serial.print(F("\tSSID : "));
+//         Serial.println((const char *)sys_event->event_info.prov_cred_recv.ssid);
+//         Serial.print(F("\tPassword : "));
+//         Serial.println((char const *)sys_event->event_info.prov_cred_recv.password);
+
+//         Serial.println(F("They are now stored in flash memory"));
+//         preferences.putString("ssid", (const char *)sys_event->event_info.prov_cred_recv.ssid);
+//         preferences.putString("password", (char const *)sys_event->event_info.prov_cred_recv.password);
+//         break;
+//       }
+//     case ARDUINO_EVENT_PROV_CRED_FAIL:
+//       {
+//         Serial.println(F("\nProvisioning failed!\nPlease reset to factory and retry provisioning\n"));
+//         if (sys_event->event_info.prov_fail_reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR)
+//           Serial.println(F("\nWi-Fi AP password incorrect"));
+//         else
+//           Serial.println(F("\nWi-Fi AP not found....Add API \" nvs_flash_erase() \" before beginProvision()"));
+//         break;
+//       }
+//     case ARDUINO_EVENT_PROV_CRED_SUCCESS:
+//       Serial.println(F("\nProvisioning Successful"));
+//       break;
+//     case ARDUINO_EVENT_PROV_END:
+//       Serial.println(F("\nProvisioning Ends"));
+//       break;
+//     default:
+//       break;
+//   }
+// }
 
 void setup() {
   // Initialize OLED
@@ -198,13 +210,23 @@ void setup() {
   password = preferences.getString("password", "");
 
   if (ssid == "" || password == "") {
-    Serial.println(F("\nNo value saved for ssid or password"));
+    // Serial.println(F("\nNo value saved for ssid or password"));
+    Heltec.display->clear();
+    Heltec.display->drawString(0, 0, "No value saved for ssid or");
+    Heltec.display->drawString(0, 16, "password.");
+    Heltec.display->display();
   } else {
-    Serial.println(F("\nWi-Fi credentials found in NVS."));
-    Serial.print(F("Trying to connect to: "));
-    Serial.println(ssid);
+    // Serial.println(F("\nWi-Fi credentials found in NVS."));
+    // Serial.print(F("Trying to connect to: "));
+    // Serial.println(ssid);
+    Heltec.display->clear();
+    Heltec.display->drawString(0, 0, "Wi-Fi credentials found.");
+    Heltec.display->drawString(0, 16, "Trying to connect to: ");
+    Heltec.display->drawString(0, 32, ssid);
+    Heltec.display->display();
+    delay(500);
     // Serial.println(password);
-    Serial.print("\n");
+    // Serial.print("\n");
     WiFi.begin(ssid.c_str(), password.c_str());
 
     // We check if stored credentials allows us to connect.
@@ -214,26 +236,42 @@ void setup() {
       count++;
       Serial.print(".");
     }
-    WiFi.onEvent(SysProvEvent);
+    WiFi.onEvent(CredsRecvEvent, ARDUINO_EVENT_PROV_CRED_RECV);
     if (count < 10) {
       // Success => We exit setup function.
-      Serial.print(F("Connected to access point!"));
+      // Serial.print(F("Connected to access point!"));
+      Heltec.display->clear();
+      Heltec.display->drawString(0, 0, "Connected to access point!");
+      Heltec.display->display();
+      delay(500);
       return;
     }
+    Heltec.display->clear();
+    Heltec.display->drawString(0, 0, "Stored credentials seem");
+    Heltec.display->drawString(0, 16, "incorrect or known AP");
+    Heltec.display->drawString(0, 32, "is not disponible.");
   }
   // Seems like we could not connect.
-
-  Serial.println(F("\nBegin Provisioning using BLE"));
+  delay(1000);
+  // Serial.println(F("\nBegin Provisioning using BLE"));
+  Heltec.display->clear();
+  Heltec.display->drawString(0, 0, "Please use Espressif");
+  Heltec.display->drawString(0, 16, "application for BLE");
+  Heltec.display->display();
   // Sample uuid that user can pass during provisioning using BLE
   uint8_t uuid[16] = { 0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
                        0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02 };
   WiFiProv.beginProvision(NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BLE, NETWORK_PROV_SECURITY_1, pop, service_name, service_key, uuid, reset_provisioned);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
 }
 
 void loop() {
-    WiFi.onEvent(SysProvEvent);
+  WiFi.onEvent(CredsRecvEvent, ARDUINO_EVENT_PROV_CRED_RECV);
   // wait for WiFi connection
-  // if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED) {
 
     HTTPClient http;
 
@@ -264,17 +302,17 @@ void loop() {
     }
 
     http.end();  // libération des ressources
-  // } else {
-  //   Heltec.display->clear();
-  //   Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
-  //   Heltec.display->setFont(ArialMT_Plain_16);
-  //   Heltec.display->drawString(64, 4, "Reconnexion");
-  //   Heltec.display->drawString(64, 20, "au Wifi");
-  //   Heltec.display->drawString(64, 36, "Patientez...");
-  //   Heltec.display->display();
-  //   Serial.println("Erreur connexion Wifi");
-  //   cycle = 0;  // on ne passe pas en veille tant que la connexion wifi n'est pas établie
-  // }
+  } else {
+    Heltec.display->clear();
+    Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
+    Heltec.display->setFont(ArialMT_Plain_16);
+    Heltec.display->drawString(64, 4, "Reconnexion");
+    Heltec.display->drawString(64, 20, "au Wifi");
+    Heltec.display->drawString(64, 36, "Patientez...");
+    Heltec.display->display();
+    Serial.println("Erreur connexion Wifi");
+    cycle = 0;  // on ne passe pas en veille tant que la connexion wifi n'est pas établie
+  }
 
   //Wait for 10 seconds
   delay(10000);

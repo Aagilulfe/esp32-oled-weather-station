@@ -4,3 +4,5 @@
  Code inspiré du dépôt de JohannBro : https://github.com/JohannBro/OpenWeatherMap-WIFI-KIT-32
 
 Ajout d'un système de provisioning BLE pour les crédentiels wifi.
+
+![Functioning process chart](images/functioning_process.png)
